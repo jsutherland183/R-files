@@ -1,0 +1,78 @@
+---
+title: "Lab 1: Intro to R"
+author: "Your Name"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r load-data, message=FALSE}
+source("http://www.openintro.org/stat/data/arbuthnot.R")
+# save and read as csv file
+write.csv(arbuthnot, "arbuthnot.csv", row.names = FALSE)
+arbuthnot <- read.csv("arbuthnot.csv")
+# save and read as R data 
+save(arbuthnot, file="arbuthnot.RData")
+load("arbuthnot.RData")
+```
+
+### Exercise 1
+
+```{r view-girls-counts}
+arbuthnot$girls
+```
+
+
+### Exercise 2
+
+Insert any text here.
+
+```{r trend-girls}
+# Insert code for Exercise 2 here
+```
+
+
+### Exercise 3
+
+Insert any text here.
+
+```{r plot-prop-boys-arbuthnot}
+# Insert code for Exercise 3 here
+```
+
+
+### Exercise 4
+
+Insert any text here.
+
+```{r dim-present}
+# Insert code for Exercise 4 here
+source("http://www.openintro.org/stat/data/present.R")
+```
+
+
+### Exercise 5
+
+Insert any text here.
+
+```{r count-compare}
+# Insert code for Exercise 5 here
+```
+
+
+### Exercise 6
+
+Insert any text here.
+
+```{r plot-prop-boys-present}
+# Insert code for Exercise 6 here
+```
+
+
+### Exercise 7
+
+Insert any text here.
+
+```{r find-max-total}
+# Insert code for Exercise 7 here
+```
+

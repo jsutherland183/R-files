@@ -1,0 +1,42 @@
+---
+title: "STA3100 Homework 5"
+author: "Jordan Sutherland"
+date: "3/24/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1. The research question I will be answering is if there is a relationship between the maturity status of the mother and whether the baby was classified as low birthweight or not. The null hypothesis is that there is no relationship between the maturity status of the mother and whether the baby was classified as low birthweight or not. The alternative hypothesis states that there is a realtionship between the two variables.
+
+```{r}
+nc <-read.csv("nc.csv", header=T)
+attach(nc)
+```
+
+2. Based on the results, we fail to reject the null hypothesis at alpha = 0.05. We do not have sufficient evidence to conclude that there is a relationship between the maturity status of the mother and whether the baby was classified as low birthweight or not. The p-values from the tests greatly differed, but both were quite large and would've resulted in failing to reject the null at any standard alpha level (0.10, 0.05, 0.01).
+
+```{r}
+chisq.test(table(mature,lowbirthweight), correct = FALSE)
+chisq.test(table(mature,lowbirthweight), correct = FALSE, simulate.p.value = TRUE)
+```
+
+3. The research question I will be answering is if there is a relationship between whether the mother is white or not and whether the birth was classified as premature or full-term. The null hypothesis is that there is no relationship between whether the mom is white or not and whether the birth was classified as premature or full-term. The alternative hypothesis states that there is a realtionship between the two variables.
+
+4. Based on the results, we reject the null hypothesis at alpha = 0.05. We have strong evidence that there is a relationship between whether the mother is white or not and whether the birth was classified as premature or full-term. Both tests calculated similar p-values that would result in the same conclusion at any standard alpha level (0.10, 0.05, 0.01).
+
+```{r}
+chisq.test(table(premie,whitemom), correct = FALSE)
+chisq.test(table(premie,whitemom), correct = FALSE, simulate.p.value = TRUE)
+```
+
+5. The research question I will be answering is if there is a relationship between status of the mother as a "nonsmoker" or "smoker" and whether the gender of the baby was male or female. The null hypothesis is that there is no relationship between status of the mother as a "nonsmoker" or "smoker" and whether the gender of the baby was male or female. The alternative hypothesis states that there is a realtionship between the two variables.
+
+6. Based on the results, we fail to reject the null hypothesis at alpha = 0.05. We do not have sufficient evidence that there is a relationship between status of the mother as a "nonsmoker" or "smoker" and whether the gender of the baby was male or female. The p-values from the tests slightly differed, but both were large enough to have resulted in failing to reject the null at any standard alpha level (0.10, 0.05, 0.01).
+
+```{r}
+chisq.test(table(habit,gender),correct = FALSE)
+chisq.test(table(habit,gender),correct = FALSE, simulate.p.value = TRUE)
+```
