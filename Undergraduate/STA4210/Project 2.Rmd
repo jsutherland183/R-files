@@ -1,0 +1,104 @@
+---
+title: "STA4210 Project 2"
+author: "Jordan Sutherland"
+date: "3/19/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Project 2
+
+1. I saved the files and had them read into R. Then the R code combines the files into one set of data. The next lines of code names the variables and labels the 0's and 1's in the major column to "no" and "yes" respectively. The last line of code displays the first three lines of the data set.
+
+```{r}
+gpa.df <- read.table("CH01PR19.txt",header=FALSE)
+major <- scan("CH08PR16.txt")
+names(gpa.df) <- c("gpa","act")
+gpa.df$major <- major
+gpa.df$majorf <- factor(major, levels=c(0,1),labels=c("no","yes"))
+gpa.df[1:3,]
+```
+
+2. The first two lines of code set up the design matrix X with 1's in the left column and ACT scores in the right column. The next two lines solve for the inverse of X^(t)X. Then I set Y to be the vector of GPA and calculated X^(t)Y. The last lines calculate betahat from the product of the inverse of X^(t)X and X^(t)Y.
+
+```{r}
+n <- nrow(gpa.df)
+X <- matrix(c(rep(1,n),gpa.df$act),nrow=n)
+XtX <- t(X) %*% X; XtX
+XtX.inv<-solve(XtX);round(XtX.inv,digits=3)
+Y <- gpa.df$gpa
+XtY <- t(X) %*% Y; XtY
+betahat <- XtX.inv %*% XtY
+betahat
+```
+
+Yhat = 2.11404929 + 0.03882713X1
+
+3. The first line creates the design matrix (let it be Z since X has already been used for the multiple regression model that does not include interaction) with 1's in the first column, ACT scores in the middle column, and major in the last column. The next 2 lines calculate the inverse of Z^(t)Z. The R code then solves for Z^(t)Y and the product of the inverse of Z^(t)Z and Z^(t)Y for betahat1.
+
+```{r}
+Z <- matrix(c(rep(1,n),gpa.df$act, gpa.df$major),nrow=n)
+ZtZ <- t(Z) %*% Z; ZtZ
+ZtZ.inv<-solve(ZtZ);round(ZtZ.inv,digits=3)
+ZtY <- t(Z) %*% Y; ZtY
+betahat1 <- ZtZ.inv %*% ZtY
+betahat1
+```
+
+Yhat = 2.19841929 + 0.03789396X1 - 0.09430392X2
+So major declared would be Yhat = 2.19841929 + 0.03789396X1 - 0.09430392X2
+and major not declared would be Yhat = 2.19841929 + 0.03789396X1
+
+4. The R code fit the model equation with the interaction term and displays the summary output.
+
+```{r}
+fit2 <- lm(gpa ~ act + major + act:major, data=gpa.df)
+summary(fit2)
+```
+
+The entire fitted model equation is Yhat = 3.226318 - 0.002757X1 - 1.649577X2 +0.062245X1X2
+So the fitted model equation for students that did not declare a major is Yhat = 3.226318 - 0.002757X1 
+and the fitted model equation for students that declared a major is Yhat = 1.576741 +  0.059488X1
+
+5. The hypotheses would be that beta12 is 0 for the null and beta12 is not 0 for the alternative. The test statistic is 2.35 with null distribution t116. With a p-value of 0.0205, we reject the null. We have strong evidence that the interaction term is not 0 and should not be dropped from the model. The coefficient of ACT score is different for those that have declared a major and those that have not. This could be due to the students that declared a major taking different, specialized classes in their field and receiving different grades.
+
+6. The R code fits the simple linear regression model equation. The next lines provide the betahat for the simple linear regression equation and the multiple regression interaction equation and plot all of the model equations on the graph for reference. The last lines calculate prediction intervals for the simple linear regression model equation and multiple regression model equation with interaction at ACT scores of 20, 25, and 30.
+
+```{r}
+fit1 <- lm(gpa ~ act, data=gpa.df)
+fit1
+fit2
+plot(
+    gpa.df$act,
+    gpa.df$gpa,
+    main="ACT and Gpa",
+    xlab="ACT",
+    ylab="GPA",
+)
+abline(  3.226318 , -0.002757)
+abline(  2.11405 , 0.03883)
+abline(  1.576741 , 0.059488)
+```
+
+From the equations and plot, the intercept and slope for SLR are closer to the interaction model when major is declared than the values of the interaction model when major is not declared. The intercept for the interaction model when major is not declared is much higher than the other two model equations. The slope of the interaction model when major is not declared is negative which is also very different from the other regression models.
+
+```{r}
+predict(fit1,newdata=data.frame(act=20),interval="prediction")
+predict(fit2,newdata=data.frame(act=20,major=0),interval="prediction")
+predict(fit2,newdata=data.frame(act=20,major=1),interval="prediction")
+predict(fit1,newdata=data.frame(act=25),interval="prediction")
+predict(fit2,newdata=data.frame(act=25,major=0),interval="prediction")
+predict(fit2,newdata=data.frame(act=25,major=1),interval="prediction")
+predict(fit1,newdata=data.frame(act=30),interval="prediction")
+predict(fit2,newdata=data.frame(act=30,major=0),interval="prediction")
+predict(fit2,newdata=data.frame(act=30,major=1),interval="prediction")
+```
+
+From the prediction intervals, the simple linear regression model more closely resembles the multiple regression interaction model for those that declared a major than the interaction model for those that did not declare a major.
+
+
+
+
