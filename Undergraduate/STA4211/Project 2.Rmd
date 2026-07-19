@@ -1,0 +1,150 @@
+---
+title: "STA4211 Project 2"
+author: "Jordan Sutherland"
+date: "12/07/2021"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+The study investigates if food cooked in different pot types affects the iron content in the food. Three types of pots were used to cook food in the study: aluminum, clay, and iron. Three types of Ethiopian dishes were cooked in the different pot types: meat, legumes, and vegetable. Four samples of each food type were cooked in each type of pot. Then the iron content was measured and recorded in milligrams of iron per 100 grams of food. The goal of the analysis is to determine whether food cooked in an iron pot contains more iron than if the food were cooked in other pot types.
+
+1. I will load in the dataset, set up the predictor variables as factors, and verify it was loaded in correctly.
+
+```{r}
+cook <- read.csv("cook.csv",header=TRUE)
+cook$dish <- factor(cook$dish,levels=c("meat","legumes","vegetable"))
+cook$pot <- factor(cook$pot,levels=c("Aluminum","Clay","Iron"))
+cook[1:3,]
+```
+
+The first line reads the dataset into R. The middle lines set up the factors, dish and pot, to have 3 levels each: meat, legumes, vegetable and Aluminum, Clay, Iron respectively. The last line displays the first few lines of the dataset to verify it was loaded in correctly.
+
+2. I will calculate cell means and standard deviations, show plot of factor level means and the interaction plot.
+
+```{r}
+tapply(cook$iron, list(cook$pot,cook$dish), mean)
+tapply(cook$iron, list(cook$pot,cook$dish), sd)
+plot.design(iron ~ dish*pot, data=cook)
+interaction.plot(cook$pot, cook$dish,response=cook$iron)
+```
+
+The first line calculates each of the cell means. The second line calculates the cell standard deviations. The third line generates a plot of factor level means. The last line creates an interaction plot.
+
+3. The interaction plot indicates presence of interaction. The effect of each of the food dishes is not the same at the Clay and Iron pot types. The meat and legumes lines from Clay to Iron intersect, so dish and pot interact.
+
+4. I will fit the two-way ANOVA model with interaction and show the ANOVA table.
+
+```{r}
+fit <- aov(iron ~ pot + dish + dish:pot, data=cook)
+anova(fit)
+```
+
+The first line of code uses the aov() function to fit the two-way ANOVA model with interaction. The second line displays the ANOVA table.
+
+5. The null hypothesis for the test of interaction effect is that all alpha-beta(ij) for i=1,2,3 and j=1,2,3 are equal to 0 (no interaction between the two factors). The alternative hypothesis is that at least one alpha-beta(ij) is not equal to 0 (there is interaction between the two factors). From the ANOVA table, Fobs = MSAB/MSE = 0.6601/0.1349 = 4.893 which has a p-value of 0.004247. With this small p-value we can reject the null hypothesis and conclude there is an interaction effect.
+
+6. I will calculate the Scheffe critical constant for the confidence intervals.
+
+```{r}
+S <- sqrt(8*qf(0.90,8,27))
+S
+```
+
+I calculated the Scheffe critical constant S by taking the square root of (ab-1)F(0.90,ab-1,ab(n-1)) where a,b=3 and n=4.
+
+
+I am 90% confident that all intervals contain their true respective parameter. Two comparisons are not significant at alpha=0.10. The comparisons were calculated as the first column of Factor B being meat dishes, the second column of Factor B is legumes dishes, and the third column of Factor B as vegetable dishes. The rows in the comparisons were aluminum pot as first row, clay pot as second row, and iron pot as the third row, all of which are of Factor A. For the iron pot, the meat dish contained more iron than the vegetable dish. The average iron content from the iron dishes was greater than the average iron content from the mean of the aluminum and clay dishes. The difference in iron levels between the iron pot meat dish and the iron pot legumes dish is not significant. The difference in iron levels between the iron pot legumes dish and the iron pot vegetable dish is also not significant.
+
+## Conclusion
+
+Overall, cooking different types of food in different pots affected how much iron was in the cooked foods. The dishes cooked in the iron pot appeared to contain the most iron content out of the three different pot types while the clay pot was only marginally better than the aluminum pot regarding iron content. Out of the dish types, meat dishes contained the most iron when cooked in the iron pot, legumes had the most iron when cooked in the aluminum or clay pot, and vegetable dishes contained the least amount of iron in any pot out of the three food dishes.
+
+## Appendix
+
+Topic 7. I will randomly select three observations to take out of the dataset and alter the cook data accordingly.
+
+```{r}
+set.seed(23)
+sample.int(36, 3)
+cookwo3 <- subset(cook, obs!="8" & obs!="28" & obs!="29")
+cookwo3[1:10,]
+```
+
+I used the set.seed function so that the randomly chosen 3 numbers between 1 and 36 could be chosen again in case these procedures are replicated. The next line randomly selects three numbers between 1 and 36 which are 8, 28, and 29. The third line creates a new data subset without the three observations that are being taken out. The last line displays the first 10 lines of the dataset to make sure the 8th observation was taken out.
+
+I will set up the dummy variables needed for the factor-effect formulation of the model
+
+```{r}
+xa1 <- factor(cookwo3$potid,labels=c("1","0","-1"))
+xa1 <- as.numeric(as.character(xa1))
+xa2 <- factor(cookwo3$potid,labels=c("0","1","-1"))
+xa2 <- as.numeric(as.character(xa2))
+xb3 <- rep(c(1,0,-1),c(11,12,10))
+xb4 <- rep(c(0,1,-1),c(11,12,10))
+xab13 <- xa1*xb3
+xab23 <- xa2*xb3
+xab14 <- xa1*xb4
+xab24 <- xa2*xb4
+```
+
+The first 2 lines convert numbers of the factor "potid" from the dataset into 1,0,-1 and then converts the factor into a vector. The next 2 lines convert numbers of the factor "potid" from the dataset into 0,1,-1 and then converts the factor into a vector. The vectors created from these 4 lines create the two dummy variables for Factor A (pot). The next 2 lines create the dummy variables for Factor B (dish)
+
+I will fit the regression model with response iron and with the eight dummy variables as predictors.
+
+```{r}
+fit.full <- lm(iron ~ xa1 + xa2 + xb3 + xb4 + xab13 + xab23 + xab14 + xab24, data=cookwo3)
+summary(fit.full)
+```
+
+The first line fits the full model with response iron and the eight dummy variables as predictors. The last line displays the summary output of the full fitted model.
+
+I will fit the three reduced models and calculate the SS and df for each of them.
+
+```{r}
+SSE.full <- sum(residuals(fit.full)^2)
+df.full <- fit.full$df.residual
+fit.noA <- lm(iron ~ xb3 + xb4 + xab13 + xab23 + xab14 + xab24, data=cookwo3)
+SSE.noA <- sum(residuals(fit.noA)^2)
+df.noA <- fit.noA$df.residual
+fit.noB <- lm(iron ~ xa1 + xa2 + xab13 + xab23 + xab14 + xab24, data=cookwo3)
+SSE.noB <- sum(residuals(fit.noB)^2)
+df.noB <- fit.noB$df.residual
+fit.noAB <- lm(iron ~ xa1 + xa2 + xb3 + xb4, data=cookwo3)
+SSE.noAB <- sum(residuals(fit.noAB)^2)
+df.noAB <- fit.noAB$df.residual
+```
+
+The first 2 lines calculates the SSE and df for the full model. The next 3 lines fit the reduced model without the dummy variables for Factor A and calculate the SS and df. The next 3 lines fit the reduced model without the dummy variables for Factor B and calculate the SS and df. The last 3 lines fit the reduced model without the dummy variables for the AB interaction dummy variables and calculate the SS and df.  
+
+I will calculate the mean squares from each of the SSA, SSB, SSAB,  and df.
+
+```{r}
+MSE <- (SSE.full/df.full)
+MSA <- (SSE.noA - SSE.full)/(df.noA - df.full)
+MSB <- (SSE.noB - SSE.full)/(df.noB - df.full)
+MSAB <- (SSE.noAB - SSE.full)/(df.noAB - df.full)
+```
+
+The first line calculates MSE from the SSE and df of the full model. The second line calculates the MSA by taking (SS(reduced)-SS(full))/df where the reduced model drops the dummy variables for Factor A. The third line calculates the MSB by taking (SS(reduced)-SS(full))/df where the reduced model drops the dummy variables for Factor B. The last line calculates the MSAB by taking (SS(reduced)-SS(full))/df where the reduced model drops the dummy variables for the interaction terms.
+
+I will calculate the F values from MSA, MSB, MSAB, and MSE.
+
+```{r}
+F.A <- MSA/MSE
+pf(F.A,2,24,lower.tail=FALSE)
+F.B <- MSB/MSE
+pf(F.B,2,24,lower.tail=FALSE)
+F.AB <- MSAB/MSE
+pf(F.AB,4,24,lower.tail=FALSE)
+```
+
+The first 2 lines calculate the F statistic for Factor A and the p-value. The first 2 lines calculate the F statistic for Factor B and the p-value.The first 2 lines calculate the F statistic for the AB interaction and the p-value.
+
+For conducting the F tests, the hypotheses for test of interaction effect are H0: all alpha-beta(ij) for i=1,2,3 and j=1,2,3 are equal to 0 (no interaction between the two factors) and Ha: at least one alpha-beta(ij) is not equal to 0 (there is interaction between the two factors). The hypotheses for Factor A main effects are H0: alpha1=alpha2=alpha3 and Ha: not all alphai=0. The hypotheses for Factor B main effects are H0: beta1=beta2=beta3 and Ha: not all betaj=0. From the ANOVA table constructed above, the p-values calculated are approximately 0, so we would reject the null hypotheses and conclude the alternatives. 

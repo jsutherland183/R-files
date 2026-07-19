@@ -1,0 +1,95 @@
+---
+title: "Project 1"
+author: "Jordan Sutherland"
+date: "10/22/2021"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Mean Premium Distribution Time
+
+1. First I loaded in the dataset and named the columns "days", "agent", and "id". Then I label the agent column as a factor with 5 levels, one for each agent. The last line of code shows 2 lines of data for each of the five agents to verify the data was read correctly.
+
+```{r}
+premium <- read.table("CH16PR12.txt",
+                      col.names=c("days","agent","id"))
+premium$agent <- factor(premium$agent)
+premium[c(1,2,21,22,41,42,61,62,81,82),]
+```
+
+
+
+2. 
+A. The first line takes note of the sample sizes of each of the five agents which is 20 transactions. The next line of code computes the means for each of the agents' distribution time in days. The next line calculates the standard deviations of each of the agents' distribution time in days. The last line shows the summary statistics for all the agents.
+
+```{r}
+ns <- aggregate(premium$days, by=data.frame(premium$agent),
+               FUN=length)$x
+ybars <- aggregate(premium$days, by=data.frame(premium$agent),
+                   FUN=mean)$x
+sds <- aggregate(premium$days, by=data.frame(premium$agent),
+                 FUN=sd)$x
+data.frame(Agent=levels(premium$agent),Mean=ybars,SD=round(sds,digits=2), sample=(ns))
+```
+
+
+B. The first line creates a plot of the factor level means which is the mean distribution time for each of the agents. The second line creates comparative boxplots for the five agents.
+
+```{r}
+plot.design(days ~ agent, data=premium)
+plot(days ~ agent, data=premium)
+```
+
+
+
+3. Based on the summary statistics, agent 1 had a mean distribution time of 24.55 days for transactions and standard deviation of 2.48 days. Agent 2 had a mean distribution time of 22.55 days for transactions and standard deviation of 2.98 days. Agent 3 had a mean distribution time of 11.75 days for transactions and standard deviation of 2.57 days. Agent 4 had a mean distribution time of 14.8 days for transactions and standard deviation of 2.53 days. Agent 5 had a mean distribution time of 30.1 days for transactions and standard deviation of 3.09 days. The boxplots show that there is a difference between the mean distribution times of the agents so it appears that the test statistic would be significant. Then an overall F test would be appropriate to test if the difference is due to chance. 
+
+
+
+4. 
+A. The first 2 lines of code creates and shows the ANOVA table for the dataset. The last line makes the plot of residuals versus fitted values. The points are evenly divided between being above and below the zero line so the constant variance assumption appears to be satisfied.
+```{r}
+premium.aov <- aov(days ~ agent, data=premium)
+anova(premium.aov)
+plot(premium.aov, which=1)
+```
+
+```{r, include=FALSE}
+#standardized residual plot
+plot(fitted(premium.aov),rstandard(premium.aov))
+```
+
+
+B. The line of code shows the quantile-quantile plot of the residuals. The data is approximately linear so the normality assumption appears to be satisfied.
+```{r}
+plot(premium.aov, which=2)
+```
+
+
+
+5. The null hypothesis for the cell-means model is H0: mu1 = mu2 = mu3 = mu4 = mu5 and the alternative hypothesis is Ha: mui is not equal to muj for i not equal to j. From the ANOVA table output in 4, the F statistic is 147.23. Under the null distribution F4,95, we reject the null if the F statistic exceeds 2.467494. Since the F statistic is 147.23 > 2.467494 and the p-value is 2.2e-16, we reject the null hypothesis that all the means are equal. Then a follow up analysis comparing factor level means would be appropriate to determine which means differ.
+
+```{r}
+qf(0.95,df1=4,df2=95,lower.tail=TRUE)
+```
+
+
+
+6. See handwritten calculations.
+
+```{r}
+S <- sqrt(4*qf(0.90,4,95))
+S
+```
+
+
+
+7. None of the contrasts on their own focus on the question precisely. A contrast that can be used to address the marketing director's question is L4 = (mu1 + mu2) - (mu3/2 + mu4/2 + mu5)
+
+
