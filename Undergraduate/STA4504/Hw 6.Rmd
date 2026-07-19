@@ -1,0 +1,118 @@
+---
+title: "Hw 6"
+author: "Jordan Sutherland"
+date: "3/23/2022"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MASS)
+library(VGAM)
+```
+
+## 1
+
+The code below reads in the dataset.
+
+```{r}
+dataURL <- url("https://ajmolstad.github.io/docs/HW5_Q2.csv")
+Smoking <- read.csv(dataURL, header=TRUE)
+```
+
+The code below fits a cumulative proportional odds model for the data.
+
+```{r}
+po.smoking <- vglm(breathing ~ factor(smoking) + age, family = cumulative(parallel = TRUE), data = Smoking, hde.NA = FALSE)
+```
+
+## 1a
+
+The first line of code below fits a baseline-category logit model and is copied from the previous homework. The next lines of code calculate the AIC values of both models.
+
+```{r}
+bl.smoking <- vglm(breathing ~ factor(smoking) + age, family = multinomial, data = Smoking)
+AIC(bl.smoking)
+AIC(po.smoking)
+```
+
+AIC values can be used to compare whether this model fits the data better than the previous baseline-category logit model. The AIC values obtained from the models are similar. The original model has a slightly lower AIC which indicates a marginally better fit for the data. 
+
+## 1b
+
+The code below creates a non-proportional odds model and runs a likelihood ratio test for the proportional odds model.
+
+```{r}
+po.smoking2 <- vglm(breathing ~ factor(smoking) + age, family = cumulative(parallel = FALSE), data = Smoking, hde.NA = FALSE)
+lrtest(po.smoking2, po.smoking)
+```
+
+The null hypothesis is that both beta11 and beta21 of the non-proportional odds model are equal to beta1 of the proportional odds model and similarly, beta12 and beta22 of the non-proportional odds model are equal to beta2 of the proportional odds model. The alternative hypothesis is one of the equalities is false. The test statistic is 5.5269. This follows a chi-squared distribution with 3 degrees of freedom under the null hypothesis.
+
+With a p-value of 0.137, we fail to reject the null hypothesis. There is not enough evidence to conclude that either beta11 and beta21 of the non-proportional odds model are equal to beta1 of the proportional odds model or that beta12 and beta22 of the non-proportional odds model are equal to beta2 of the proportional odds model.
+
+## 1c
+
+The code below provides the estimates for the coefficients of the cumulative logit model with proportional odds.
+
+```{r}
+summary(po.smoking)
+```
+
+## 1d
+
+```{r}
+vcov(po.smoking)
+```
+
+## 2
+
+The code below reads in the dataset.
+
+```{r}
+dataURL <- url("https://ajmolstad.github.io/docs/HW6_Q2.RDS")
+Chemo <- readRDS(dataURL)
+```
+
+## 2a
+
+```{r}
+po.chemo <- vglm(response ~ treatment + gender, family = cumulative(parallel = TRUE), data = Chemo, hde.NA = FALSE)
+summary(po.chemo)
+```
+
+There is evidence that the two treatment approaches have a different effect on disease progression since the treatmentsequential coefficient has a very small p-value. 
+
+## 2b
+
+
+
+## 2c
+
+The code below creates a non-proportional odds model and runs a likelihood ratio test for the proportional odds model.
+
+```{r}
+po.chemo2 <- vglm(response ~ treatment + gender, family = cumulative(parallel = FALSE), data = Chemo, hde.NA = FALSE)
+lrtest(po.chemo2, po.chemo)
+```
+
+The null hypothesis is that both beta11 and beta21 of the non-proportional odds model are equal to beta1 of the proportional odds model and similarly, beta12 and beta22 of the non-proportional odds model are equal to beta2 of the proportional odds model. The alternative hypothesis is one of the equalities is false. The test statistic is 3.1897 This follows a chi-squared distribution with 4 degrees of freedom under the null hypothesis.
+
+With a very large p-value of 0.5266, we fail to reject the null hypothesis. There is not enough evidence to conclude that either beta11 and beta21 of the non-proportional odds model are equal to beta1 of the proportional odds model or that beta12 and beta22 of the non-proportional odds model are equal to beta2 of the proportional odds model.
+
+## 3a
+
+The response Y has 5 categories. Protestant is the most liberal while Other is the most conservative.
+
+## 3b
+
+
+
+
+
+
+
+

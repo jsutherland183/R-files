@@ -1,0 +1,51 @@
+---
+title: "Hw 7"
+author: "Jordan Sutherland"
+date: "4/8/2022"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1a
+
+```{r}
+pchisq(10.91449,1,lower.tail=FALSE, log.p=FALSE)
+```
+
+## 1d
+
+```{r}
+binom.test(125,127,p=0.5,alternative="greater")
+```
+
+## 2
+
+```{r}
+library(gee)
+library(survival)
+library(psych)
+```
+
+```{r}
+MS <- readRDS(url("https://ajmolstad.github.io/docs/MS.RDS"))
+MS.table <- matrix(c(37,33,10,3,5,11,14,7,0,3,5,3,1,0,6,10),nrow=4,ncol=4)
+```
+
+## 2c
+
+```{r}
+cohen.kappa(MS.table)
+```
+
+## 2d
+
+```{r}
+MS$newRating <- 1*(MS$Rating == "1" | MS$Rating == "2")
+modInd <- gee(newRating ~ Neurologist, id=patient, family=binomial, data=MS)
+summary(modInd)
+modC <- clogit(newRating ~ Neurologist + strata(patient), data=MS)
+summary(modC)
+```

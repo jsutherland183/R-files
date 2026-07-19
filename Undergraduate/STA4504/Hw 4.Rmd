@@ -1,0 +1,242 @@
+---
+title: "Hw 4"
+author: "Jordan Sutherland"
+date: "2/9/2022"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. 
+
+The R code below sets up the dataset.
+
+```{r}
+library(kernlab)
+data(spam)
+charExclamation <- spam$charExclamation
+spamEmail <- 1*(spam$type == "spam")
+SpamData <- data.frame("spamEmail" = spamEmail,
+"charExclamation" = charExclamation)
+```
+
+The R code below generates the general linear model with a logit link.
+
+```{r}
+spam.logit=glm(spamEmail~charExclamation,family=binomial(link=logit),data=SpamData)
+summary(spam.logit)
+```
+
+# a)
+
+The first calculation below uses the estimates from the summary output to find the center of the confidence interval. The next 2 lines of R code find the variance matrix and calculate the standard error. The next line finds the critical value for the 95% confidence interval. Then, the Ua and La are calculated as the upper and lower bounds for alpha + beta(x). Lastly, the bounds for the probabilities are calculated by taking pi(x)/(1+pi(x)) where pi(x) is e to the power of either Ua or La.
+
+```{r}
+centera <- -0.96180+2.44520*0.25
+vcov(spam.logit)
+se <- sqrt(vcov(spam.logit)[1,1] + (0.25)^2 * vcov(spam.logit)[2,2] + 0.5*vcov(spam.logit)[2,1])
+critvaluea <- qnorm(0.975,lower.tail=FALSE)
+Ua <- centera - critvaluea*se
+La <- centera + critvaluea*se
+exp(La)/(1 + exp(La))
+exp(Ua)/(1 + exp(Ua))
+```
+
+We are 95% confident that the interval (0.3973731, 0.4293319) captures the true probability that an email is spam when the percent of characters that are "!" is 25%.
+
+# b) 
+
+The first calculation below uses the estimates from the summary output to find the center of the confidence interval. The next 2 lines of R code find the variance matrix and calculate the standard error. The next line of R code determines critical value for the 99% confidence interval. Then, the Ub and Lb are calculated as the upper and lower bounds for alpha + beta(x). Next, the bounds for the probabilities (Upb and Lpb) are calculated by taking pi(x)/(1+pi(x)) where pi(x) is e to the power of either Ub or Lb. Lastly, the bounds for the odds are calculated by taking the probability/(1-probability) where probability is either Lpb or Upb.
+
+```{r}
+centerb <- -0.96180+2.44520*0.1
+vcov(spam.logit)
+se <- sqrt(vcov(spam.logit)[1,1] + (0.1)^2 * vcov(spam.logit)[2,2] + 0.2*vcov(spam.logit)[2,1])
+critvalueb <- qnorm(0.995,lower.tail=FALSE)
+Ub <- centerb - critvalueb*se
+Lb <- centerb + critvalueb*se
+Lpb <- exp(Lb)/(1 + exp(Lb))
+Upb <- exp(Ub)/(1 + exp(Ub))
+Lpb/(1-Lpb)
+Upb/(1-Upb)
+```
+
+We are 95% confident that the interval (0.4471911,0.5327033) captures the true odds that that an email is spam when the percent of characters that are "!" is 10%.
+
+# c)
+
+I would feel comfortable labeling an email spam at around 75% charExclamation since the probability of the email being spam is 0.7051825. I would rather have someone deal with a few more spam emails they'd have to manually delete than be blamed that a legitimate email was automatically sent to spam.
+
+
+# 2. 
+
+The R code below read in the crabs dataset and generates 2 general linear models: the first with width and color as predictors and the second with width, color, and interaction terms as predictors.
+
+```{r}
+crabs <- read.table(url("https://ajmolstad.github.io/docs/Crabs.dat"), header=T)
+crabs.wc.glm <- glm(y ~ width + factor(color), data = crabs, family = binomial)
+crabs.wci.glm <- glm(y ~ width + factor(color) + width:factor(color), data = crabs, family = binomial)
+```
+
+# a)
+
+The first line calculates the deviance test statistic by subtracting the residual deviances from the models. The next line finds the p-value associated with the deviance test statistic found in the first line. The last line confirms the values found above.
+
+```{r}
+Lambda <- crabs.wc.glm$deviance - crabs.wci.glm$deviance
+pchisq(Lambda, df = 3, lower=F)
+anova(crabs.wc.glm, crabs.wci.glm, test = "LRT")
+```
+
+With a high p-value of 0.2236, we reject the null hypothesis that the interaction terms are significant. There is not enough evidence to suggest that the interaction terms are necessary to the model.
+
+# b)
+
+The code below finds the correlation between observed values and estimated probabilities for each of the fitted models.
+
+```{r}
+cor(crabs$y, fitted(crabs.wc.glm))
+cor(crabs$y, fitted(crabs.wci.glm))
+```
+
+The correlation of the model with interaction is only slightly higher that the model with just width and color as predictors.
+
+# c)
+
+The first 2 lines of code below plots the ROC curves for the 2 models. The middle lines label the curves and titles the plot. The last 2 lines find the area under each of the curves.
+
+```{r}
+library(epiDisplay)
+ROC1 = lroc(crabs.wc.glm, grid=FALSE,graph=TRUE,line.col=1)
+ROC2 = lroc(crabs.wci.glm, grid=FALSE,add=TRUE,line.col=2)
+legend("bottomright", c("Width and Color", "Width and Color and Interaction"), col=1:4, lty=1, cex=1.5)
+title("ROC curves for crabs data")
+ROC1$auc
+ROC2$auc
+```
+
+The area under the curve for width and color is 0.7713601. The area under the curve for width, color, and interaction is 0.7809503. From this, the model with interaction terms has slightly better predictive performance than the model with just width and color. 
+
+# d)
+
+Based on the outcomes of (b) and (c), the model with interactions is only marginally better than the model with only width and indicators for color as predictors.
+
+# 3. 
+
+The first line sets seed so the results are reproducible. The rest of the code simulates 1000 datasets, keeps track of what proportion reject the null hypothesis, and plots the histogram of the 1000 datasets's values of beta1. The first for loop repeats the code over beta1 values from 1 to 5. Since the question asks for 0.1 to 0.5, the beta1*x is divided by 10. I was unable to run the code with a 3rd for loop for the various values of n, but I reran the code a total of 5 times, changing the n value each time to the appropriate value. I have omitted the other 4 iterations fo the R code for simplicity and to not be repetitive. The results of all 5 times running the code at the different n values are comprised in the table below.
+
+```{r}
+set.seed(23)
+pvalue <- rep(0, 1000)
+coef <- rep(0, 100)
+  
+for(beta1 in 1:5){
+      for(i in 1:1000){
+     beta0 = 0.5
+     n = 25
+     x = rnorm(n)
+    
+         PIx = exp(beta0 + beta1*x/10) / (1 + exp(beta0 + beta1*x/10))
+         Y = rbinom(n, 1, p=PIx)
+         t3 <- glm(Y ~ x, family = binomial(link = "logit"))
+         pvalue[i] <- summary(t3)$coefficients[2,4]
+         coef[i] <- summary(t3)$coefficients[2,1]
+     }
+     cat("n = ", n, "; beta = ", beta1, "; Power = ", sum(pvalue < 0.05)/1000, sep="", "\n")
+ }
+```
+
+```{r include=FALSE}
+set.seed(23)
+pvalue <- rep(0, 1000)
+coef <- rep(0, 100)
+  
+for(beta1 in 1:5){
+      for(i in 1:1000){
+     
+     beta0 = 0.5
+     n = 50
+     x = rnorm(n)
+    
+         PIx = exp(beta0 + beta1*x/10) / (1 + exp(beta0 + beta1*x/10))
+         Y = rbinom(n, 1, p=PIx)
+         t3 <- glm(Y ~ x, family = binomial(link = "logit"))
+         pvalue[i] <- summary(t3)$coefficients[2,4]
+         coef[i] <- summary(t3)$coefficients[2,1]
+     }
+     cat("n = ", n, "; beta = ", beta1, "; Power = ", sum(pvalue < 0.05)/1000, sep="", "\n")
+ }
+```
+
+```{r include=FALSE}
+set.seed(23)
+pvalue <- rep(0, 1000)
+coef <- rep(0, 100)
+  
+for(beta1 in 1:5){
+      for(i in 1:1000){
+     
+     beta0 = 0.5
+     n = 100
+     x = rnorm(n)
+    
+         PIx = exp(beta0 + beta1*x/10) / (1 + exp(beta0 + beta1*x/10))
+         Y = rbinom(n, 1, p=PIx)
+         t3 <- glm(Y ~ x, family = binomial(link = "logit"))
+         pvalue[i] <- summary(t3)$coefficients[2,4]
+         coef[i] <- summary(t3)$coefficients[2,1]
+     }
+     cat("n = ", n, "; beta = ", beta1, "; Power = ", sum(pvalue < 0.05)/1000, sep="", "\n")
+ }
+```
+
+```{r include=FALSE}
+set.seed(23)
+pvalue <- rep(0, 1000)
+coef <- rep(0, 100)
+  
+for(beta1 in 1:5){
+      for(i in 1:1000){
+     
+     beta0 = 0.5
+     n = 250
+     x = rnorm(n)
+    
+         PIx = exp(beta0 + beta1*x/10) / (1 + exp(beta0 + beta1*x/10))
+         Y = rbinom(n, 1, p=PIx)
+         t3 <- glm(Y ~ x, family = binomial(link = "logit"))
+         pvalue[i] <- summary(t3)$coefficients[2,4]
+         coef[i] <- summary(t3)$coefficients[2,1]
+     }
+     cat("n = ", n, "; beta = ", beta1, "; Power = ", sum(pvalue < 0.05)/1000, sep="", "\n")
+ }
+```
+
+```{r include=FALSE}
+set.seed(23)
+pvalue <- rep(0, 1000)
+coef <- rep(0, 100)
+  
+for(beta1 in 1:5){
+      for(i in 1:1000){
+     
+     beta0 = 0.5
+     n = 500
+     x = rnorm(n)
+    
+         PIx = exp(beta0 + beta1*x/10) / (1 + exp(beta0 + beta1*x/10))
+         Y = rbinom(n, 1, p=PIx)
+         t3 <- glm(Y ~ x, family = binomial(link = "logit"))
+         pvalue[i] <- summary(t3)$coefficients[2,4]
+         coef[i] <- summary(t3)$coefficients[2,1]
+     }
+     cat("n = ", n, "; beta = ", beta1, "; Power = ", sum(pvalue < 0.05)/1000, sep="", "\n")
+ }
+```
+
+# 4.
+
+
+

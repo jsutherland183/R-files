@@ -1,0 +1,110 @@
+---
+title: "Hw 5"
+author: "Jordan Sutherland"
+date: "3/14/2022"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MASS)
+library(VGAM)
+```
+
+## 1
+
+The code below reads in the dataset.
+
+```{r}
+ClinicalTrial <- readRDS(url("https://ajmolstad.github.io/docs/HW5_Q1.RDS"))
+```
+
+## 1a
+
+The quasi-separation occurs in terms of the effects of center because for centers 1 and 3, there were no successes observed so the outcome could be predicted if the predictor variable is known. This results in extreme estimates and unreasonably large standard errors.
+
+## 1b
+
+The code below generates a baseline category logit model without an intercept and uses center and treatment as predictors.
+
+```{r}
+clinical.logit <- vglm(cbind(success,failure) ~ factor(center) + treatment-1, family=multinomial, data=ClinicalTrial)
+summary (clinical.logit)
+```
+
+The estimate for eta1hat is -21.9267 and the standard error is 13310.0072.The estimate for eta2hat is -21.8889 and the standard error is 12096.0555. These are not correct. 
+
+## 1c
+
+The code below provides a 2x2 matrix with active drug/placebo as the rows and success/failure as the columns.
+
+```{r}
+matrix(c(12,4,36,42),nrow=2,ncol=2)
+```
+
+The log odds ratio would be (12 * 42) / (4 * 36)=7/2. Then log(3.5)=1.2528.
+
+The code below provides a 2x2 matrix with active drug/placebo as the rows and success/failure as the columns but without centers 1 and 3.
+```{r}
+matrix(c(12,4,24,28),nrow=2,ncol=2)
+```
+
+The log odds ratio would be (12 * 24) / (4 * 28)=7/2. Then log(3.5)=1.2528. This is the same result as the log odds ratio when including centers 1 and 3.
+
+## 2
+
+The code below reads in the dataset.
+
+```{r}
+dataURL <- url("https://ajmolstad.github.io/docs/HW5_Q2.csv")
+Smoking <- read.csv(dataURL, header=TRUE)
+```
+
+## 2a
+
+The code below generates the baseline category logit model for the data with smoking and age as the predictors.
+
+```{r}
+bl.smoking <- vglm(breathing ~ factor(smoking) + age, family = multinomial, data = Smoking)
+summary(bl.smoking)
+```
+
+The estimate of beta12 from the model suggests that the ratio of pinormal/piabnormal decreases with being a current smoker and keeping age the same.
+
+## 2b
+
+The first 2 lines of code creates a baseline category logit model for the data using only age as a predictor. The last line of code performs a likelihood ratio test of whether smoking status is associated with breathing test results.
+
+```{r}
+bl.age <- vglm(breathing ~ age, family = multinomial, data = Smoking)
+summary(bl.age)
+lrtest(bl.smoking,bl.age)
+```
+
+The null hypothesis is that smoking is not associated with breathing test results. The alternative is that smoking is associated with breathing test results. The test statistic is 30.547 and follows a chi-squared distribution with 4 degrees of freedom. With a very small p-value ~0, we reject the null hypothesis. There is very strong evidence that smoking is associated with breathing test results.
+
+## 2c
+
+The probability can be found using the formula ______. 
+Because the person is under 40 and never smoked, j=1 and the formula becomes ______.
+
+## 2d
+
+The expected number of subjects who would have a normal breathing test result among those who are under 40 and have never smoked is 0.9595(2219)=2129.0552.
+
+## 2e
+
+A goodness of fit test on this model would have 6 degrees of freedom because there are 3 parameters for each of the 2 j values.
+
+## 2f
+
+To fit the saturated model to this data set, I would add interaction terms. I do not think there is sufficient data to fit the saturated model in this case because a few cells have a count fewer than 5 and one cell is 0. 
+
+
+
+

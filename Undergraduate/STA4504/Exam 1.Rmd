@@ -1,0 +1,217 @@
+---
+title: "Exam 1"
+author: "Jordan Sutherland"
+date: "2/19/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1f
+testing independence
+
+```{r}
+obstable2 <- matrix(c(80,771,261,1044),nrow=2,ncol=2)
+chisq.test(obstable2,y=NULL,correct=TRUE,simulate.p.value = FALSE)
+```
+
+## 1g
+testing against null hypothesis equalities
+
+```{r}
+pchisq(16.0008,1,lower.tail=FALSE,log.p=FALSE)
+```
+
+
+## 2 
+read in datasets
+
+```{r }
+Q2url1 <- url("https://ajmolstad.github.io/docs/Q2Grouped.RDS")
+Q2Grouped <- readRDS(Q2url1)
+Q2url2 <- url("https://ajmolstad.github.io/docs/Q2Ungrouped.RDS")
+Q2Ungrouped <- readRDS(Q2url2)
+```
+
+## 2a
+fit model for ungrouped dataset, find variance matrix
+
+```{r}
+ungr.mod <- glm(y ~ x1 + x2 + x1*x2 + x3, family=binomial(link="logit"), data=Q2Ungrouped)
+summary(ungr.mod)
+vcov(ungr.mod)
+```
+
+## 2c
+goodness of fit test for model 
+
+```{r}
+x1.g <- c(0,0,0,1,1,0,1,1)
+x2.g <- c(0,0,1,0,1,1,0,1)
+x3.g <- c(0,1,0,0,0,1,1,1)
+gr.mod  <- glm(cbind(success,failure) ~ x1.g + x2.g + x1.g*x2.g + x3.g, family=binomial(link=logit),data = Q2Grouped)
+summary(gr.mod)
+1 - pchisq(gr.mod$deviance, gr.mod$df.residual)
+test.stat <- 3.9907
+df.resid <- 3
+pchisq(test.stat, df = df.resid, lower=F)
+```
+
+## 2f
+fit model for grouped dataset
+
+```{r}
+x1.g <- c(0,0,0,1,1,0,1,1)
+x2.g <- c(0,0,1,0,1,1,0,1)
+x3.g <- c(0,1,0,0,0,1,1,1)
+gr.mod2  <- glm(cbind(success,failure) ~ x1.g + x2.g + x1.g*x2.g + x3.g, family=binomial(link=logit),data = Q2Grouped)
+summary(gr.mod2)
+```
+
+## 2g
+fit ungrouped model y ~ x1 + x2
+likelihood ratio test of H0: beta3 = beta4 = 0 for ungrouped
+
+```{r}
+ungr.mod.g1 <- glm(y ~ x1 + x2, family=binomial(link="logit"), data=Q2Ungrouped)
+summary(ungr.mod.g1)
+pchisq(1.2,2,lower.tail=FALSE,log.p=FALSE)
+```
+
+fit grouped model y ~ x1 + x2
+likelihood ratio test of H0: beta3 = beta4 = 0 for grouped
+
+```{r}
+gr.mod.g2  <- glm(cbind(success,failure) ~ x1.g + x2.g, family=binomial(link=logit),data = Q2Grouped)
+summary(gr.mod.g2)
+pchisq(1.2042,2,lower.tail=FALSE,log.p=FALSE)
+```
+
+## 3
+read in the dataset
+
+```{r}
+inputURL <- url("https://ajmolstad.github.io/docs/Cancer.RDS")
+Cancer <- readRDS(inputURL)
+```
+
+## 3a 
+fit model with y ~ SNPcat, test marginal association of SNPcat with y using likelihood ratio test
+
+```{r}
+mod1 <- glm(y ~ SNPcat, family=binomial(link=logit),data = Cancer)
+summary(mod1)
+pchisq(32.1, 2, lower.tail=FALSE,log.p=FALSE)
+```
+
+## 3b
+fit models with y ~ age + SNPcat and y ~ smoking + age + SNPcat, find variance matrix of the model with y ~ smoking + age + SNPcat
+
+```{r}
+mod2 <- glm(y ~ age + SNPcat, family=binomial(link=logit),data = Cancer)
+summary(mod2)
+mod3 <- glm(y ~ smoking + age + SNPcat, family=binomial(link=logit),data = Cancer)
+summary(mod3)
+vcov(mod3)
+```
+
+## 3c
+find the center of the confidence interval, find the variance matrix and calculate the standard error, find the critical value for the 95% confidence interval. 
+
+Then, the U and L are calculated as the upper and lower bounds for alpha + beta1(x1) + beta2(I1) + beta3(I2) + beta4(x2). Lastly, the bounds for the probabilities are calculated by taking pi(x)/(1+pi(x)) where pi(x) is e to the power of either U or L. 
+
+```{r}
+center = (-0.061461)-(0.001812*80)+0.674276*0+0.837808*0+0.007072*0
+vcov(mod3)
+se <- sqrt(vcov(mod3)[1,1] + (80)^2 * vcov(mod3)[3,3] + 160*vcov(mod3)[3,1])
+critvalue <- qnorm(0.975,lower.tail=FALSE)
+U <- center - critvalue*se
+L <- center + critvalue*se
+exp(L)/(1 + exp(L))
+exp(U)/(1 + exp(U))
+```
+
+## 3e
+find the value of logit(pi(y)) at age=50 and age=60 with SNPcat=2 and smoking=10 held fixed
+
+use the logit(pi(y)) to find the probabilities (e.prob and e.prob2) by taking pi(x)/(1+pi(x)) where pi(x) is e to the power of either logit(pi(x)) value e.cen or e.cen2
+
+find the odds (e.odds and e.odds2) by taking the probability/(1-probability) where probability is either e.prob or e.prob2
+
+find the odds ratio of age=60 to age=50, calculate the factor that odds change from x+10 and x.
+
+```{r}
+e.cen = (-0.061461)-(0.001812*50)+0.674276*0+0.837808*1+0.007072*10
+e.cen2 = (-0.061461)-(0.001812*60)+0.674276*0+0.837808*1+0.007072*10
+e.prob <- exp(e.cen)/(1+exp(e.cen))
+e.prob2 <- exp(e.cen2)/(1+exp(e.cen2))
+e.odds <- e.prob/(1-e.prob)
+e.odds2 <- e.prob2/(1-e.prob2)
+e.odds2/e.odds
+exp(-0.001812*10)
+```
+
+## 3f
+fit probit model
+
+find the value of probit(pi(y)) at age=50 and age=60 with SNPcat=2 and smoking=10 held fixed
+
+use the probit(pi(y)) to find the probabilities (f.prob and f.prob2) 
+
+find the odds (f.odds and f.odds2) by taking the probability/(1-probability) where probability is either f.prob or f.prob2
+
+find the odds ratio of age=60 to age=50
+
+```{r}
+mod4 <- glm(y ~ smoking + age + SNPcat, family=binomial(link=probit),data = Cancer)
+summary(mod4)
+f.cen = (-0.024008)-(0.001274*50)+0.415510*0+0.520441*1+0.004287*10
+f.cen2 = (-0.024008)-(0.001274*60)+0.415510*0+0.520441*1+0.004287*10
+f.prob <- pnorm(f.cen,lower.tail=TRUE,log.p=FALSE)
+f.prob2 <- pnorm(f.cen2,lower.tail=TRUE,log.p=FALSE)
+f.odds <- f.prob/(1-f.prob)
+f.odds2 <- f.prob2/(1-f.prob2)
+f.odds2/f.odds
+```
+
+## 3h
+fit each of the 6 models and provided a summary of the glms
+
+```{r}
+h.mod1 <- glm(y ~ SNPcat, family=binomial(link=probit),data = Cancer)
+summary(h.mod1)
+h.mod2 <- glm(y ~ SNPcat + age, family=binomial(link=probit),data = Cancer)
+summary(h.mod2)
+h.mod3 <- glm(y ~ SNPcat + age + smoking, family=binomial(link=probit),data = Cancer) 
+summary(h.mod3)
+h.mod4 <- glm(y ~ SNPnum, family=binomial(link=probit),data = Cancer)
+summary(h.mod4)
+h.mod5 <- glm(y ~ SNPnum + age, family=binomial(link=probit),data = Cancer)
+summary(h.mod5)
+h.mod6 <- glm(y ~ SNPnum + age + smoking, family=binomial(link=probit),data = Cancer)
+summary(h.mod6)            
+```
+
+## 3i
+ROC curve for the model with y ~ SNPnum + age + smoking, auc value for are under ROC curve  
+
+```{r}
+library(epiDisplay)
+ROC = lroc(h.mod6, grid=FALSE,graph=TRUE,line.col=1)
+ROC$auc
+```
+
+## 3j
+correct classification rate
+
+```{r}
+predicted.probs <- predict(h.mod6, type = "response")
+cbind(fitted(h.mod6) , predicted.probs)[1:5,]
+pi_0 <- 0.5
+Yhat <- 1*(predicted.probs > pi_0)
+cbind(Yhat, predicted.probs)[1:5,]
+ccr0.5 <- (sum(Yhat == 1 & Cancer$y == 1) + sum(Yhat == 0 & Cancer$y == 0))/length(Cancer$y)
+ccr0.5
+```

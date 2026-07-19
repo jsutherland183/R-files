@@ -1,0 +1,148 @@
+---
+title: "Exam 2"
+author: "Jordan Sutherland"
+date: "4/22/2022"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MASS)
+library(VGAM)
+library(gee)
+library(lme4)
+```
+
+## 1 Reading in Dataset
+
+```{r}
+pathQ1 <- url("https://ajmolstad.github.io/docs/Arthritis.RDS")
+RAdata <- readRDS(pathQ1)
+```
+
+## 1a
+
+```{r}
+bc.logit <- vglm(Symptoms ~ Events, family = multinomial, data = RAdata)
+summary(bc.logit)
+```
+
+## 1b
+
+```{r}
+bc.null <- vglm(Symptoms ~ 1, family = multinomial, data = RAdata)
+lrtest(bc.logit, bc.null)
+```
+
+## 1c
+
+```{r}
+vcov(bc.logit)
+```
+
+## 1f
+
+```{r}
+cp.logit <- vglm(Symptoms ~ Events, family = cumulative(parallel = TRUE), data = RAdata, hde.NA = FALSE)
+summary(cp.logit)
+```
+
+## 1g
+
+```{r}
+cp.null <- vglm(Symptoms ~ 1, family = cumulative(parallel = TRUE), data = RAdata, hde.NA = FALSE)
+lrtest(cp.logit,cp.null)
+```
+
+## 1h
+
+```{r}
+vcov(cp.logit)
+```
+
+## 1j
+
+```{r}
+num.logit <- vglm(Symptoms ~ EventsNum, family = cumulative(parallel = TRUE), data = RAdata, hde.NA = FALSE)
+num.null <- vglm(Symptoms ~ 1, family = cumulative(parallel = TRUE), data = RAdata, hde.NA = FALSE)
+lrtest(num.logit,num.null)
+```
+
+## 1l
+
+```{r}
+AIC(bc.logit)
+AIC(cp.logit)
+AIC(num.logit)
+```
+
+## 2 Reading in Dataset
+
+```{r}
+pathQ2 <- url("https://ajmolstad.github.io/docs/Arthritis_SideEffects_Apr23.RDS")
+SEdata <- readRDS(pathQ2)
+```
+
+## 2a
+
+```{r}
+ind.gee <- gee(side.effects ~ severity, id=patient, family=binomial, corstr="independence", data=SEdata)
+summary(ind.gee)
+```
+
+## 2b
+
+```{r}
+exc.gee <- gee(side.effects ~ severity, id=patient, family=binomial, corstr="exchangeable", data=SEdata)
+summary(exc.gee)
+```
+
+## 2e
+
+```{r}
+glmm <- glmer(side.effects ~ severity + (1|patient), data=SEdata, family=binomial)
+observed <- tapply(SEdata$side.effects, SEdata$severity, mean) 
+predictedAll <- fitted(glmm) 
+predicted <- tapply(predictedAll, SEdata$severity, function(x){x[1]})
+plot(observed, predicted, pch=20, xlim=c(0,1), ylim=c(0,1))
+abline(0,1)
+```
+
+## 2f
+
+```{r}
+glmm1 <- glmer(side.effects ~ 1 + (1|patient), data=SEdata, family=binomial)
+anova(glmm,glmm1,test="chi-sq")
+```
+
+
+## 3 Reading in Dataset
+
+```{r}
+pathQ3 <- url("https://ajmolstad.github.io/docs/Q3logLinear.RDS")
+ACDdata <- readRDS(pathQ3)
+```
+
+## 3f
+
+```{r}
+data.2way <- glm(Freq ~ A*D + D*C + A*C,
+                      family=poisson, data=ACDdata)
+summary(data.2way)
+```
+
+## 3i
+
+```{r}
+pchisq(1.4051,4,lower.tail=TRUE)
+```
+
+## 3j
+
+```{r}
+vcov(data.2way)
+```
+

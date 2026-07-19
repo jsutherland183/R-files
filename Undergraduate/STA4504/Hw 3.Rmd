@@ -1,0 +1,122 @@
+---
+title: "Hw 3"
+author: "Jordan Sutherland"
+date: "2/4/2022"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1.	
+0.00140-0.00010=0.00130 cigarette smokers die from lung cancer and 0.00669-0.00413=0.00256 cigarette smokers die from heart disease. Using the difference in proportions, cigarette smokers are much more likely to die from heart disease than lung cancer. 0.00140/0.00010=14 The odds of dying from lung cancer are estimated to be 14 times higher for smokers than for nonsmokers. 0.00669/0.00413=1.61988 The odds of dying from heart disease are estimated to be 1.6199 times higher for smokers than for nonsmokers. Heart disease is more strongly related to cigarette smoking than lung cancer. An absence of smoking would reduce deaths by 0.00130 for lung cancer and 0.00256 for heart disease.
+
+## 2. 
+Because of Simpson's paradox, Minnesota's death rate per age level contains fractions with smaller numbers and thus it is possible for Wisconsin to still have a higher overall death rate. So compared to Wisconsin, the smaller numbers do not contribute as much to the overall death rate. Since Wisconsin has age level death rates with larger numbers, the numerator and denominator are greater which results in a higher overall death rate. One more concrete example is the three-way contingency table from Florida 1976-1987. If the Death Penalty were death rate, Defendant's Race were the states, and Victim's Race were the age levels, this would show the death rates higher in Minnesota for each age group but the overall death rate being higher in Wisconsin.
+
+## 3. 
+The Poisson distribution would not fit these data well since the mean and variance are not equal. It would also not fit the data very well since Poisson is ideally used for a fixed time interval, which the situation does not specify.
+
+## 4. 
+The code below sets up the dataset.
+```{r}
+library(gam)
+data(kyphosis)
+y <- 1*(kyphosis$Kyphosis == "present")
+x <- kyphosis$Age
+KyphosisData <- data.frame("y" = y, "x" = x)
+```
+
+# a) 
+The code below creates the general linear model with a logit link function.
+```{r}
+kyphosis.logit=glm(y~x,family=binomial(link="logit"),data=KyphosisData)
+summary(kyphosis.logit)
+```
+
+From the output above, the p-value of the x term is 0.259068. With a very large p-value, we reject the null hypothesis that age is an accurate predictor for whether the patient develops kyphosis.
+
+# b) 
+The lines of code generates the general linear model for the dataset with a logit link function.
+```{r}
+ksq.logit.poly = glm(y~x+I(x^2), family=binomial(link="logit"),data=KyphosisData)
+summary(ksq.logit.poly)
+```
+From the output, the p-value of the x^2 term is 0.01349. We have sufficient evidence that the x^2 term is significant in the model at alpha level=0.05.
+
+# c)
+The lines below plot \hat{\pi}(x) as a function of x for the model in a.
+```{r}
+plot(KyphosisData$x, KyphosisData$y, xlab="Age", ylab="Kyphosis", main="Kyphosis vs Age", pch=20)
+ages <- seq(min(KyphosisData$x),max(KyphosisData$x),length=1000)
+plotdata <- data.frame("x"=ages)
+probPredicted <- predict(kyphosis.logit,newdata=plotdata, type="response")
+lines(ages, probPredicted, lwd=2)
+```
+
+The lines below plot \hat{\pi}(x) as a function of x for the model in b.
+```{r}
+plot(KyphosisData$x, KyphosisData$y, xlab="Age", ylab="Kyphosis", main="Kyphosis vs Age", pch=20)
+ages <- seq(min(KyphosisData$x), max(KyphosisData$x), length=1000)
+plotData <-  data.frame("x" = ages)
+probPredicted.ksq <- predict(ksq.logit.poly, newdata = plotData, type="response") 
+lines(ages, probPredicted.ksq, lwd = 2)
+```
+The model in a shows a relatively flat linear line for the probabilities while the model in b shows a curved line for the probabilities. 
+
+## 5. 
+The code below sets up the dataset.
+```{r}
+library(kernlab)
+data(spam)
+wordMoney <- spam$money
+charHash <- spam$charHash
+spamEmail <- 1*(spam$type == "spam")
+SpamData <- data.frame("spamEmail" = spamEmail,
+"wordMoney" = wordMoney,
+"charHash" = charHash)
+```
+
+# a)
+The code below generates the general linear model for the dataset with the probit link function.
+```{r}
+email.probit=glm(spamEmail~wordMoney,family=binomial(link="probit"),data=SpamData)
+summary(email.probit)
+```
+Based on the fitted model, the use of the word "money" is positively associated to the probability that an email is spam. When the word "money" is used more often, the email is more likely to be spam.
+
+# b)
+With a very small p-value <2e-16 from the output, we reject the null hypothesis that there is no association between the percentage of words equal to "money" and the probability that an email is spam. There is very strong evidence that there is an association using the Wald test.
+
+# c)
+Φ(-0.43303+2.47975*0.7)=
+Φ(1.302795)=
+```{r}
+pnorm(1.302795,lower.tail=FALSE)
+```
+The estimated probability that an email where 0.7% of the words used are "money" is a spam email is 0.09632238.
+
+# d)
+Φ(-0.43303+2.47975x)=0.95
+-0.43303+2.47975x=1.644854
+2.47975x=2.077884
+x=0.8379409
+In order for the estimated probability that an email is spam to be greater than or equal to 0.95, the range of values of wordMoney must be greater than or equal to 0.8379409.
+
+# e/f
+The code below creates the general linear model with a probit link function.
+```{r}
+email.probit=glm(spamEmail~charHash,family=binomial(link="logit"),data=SpamData)
+summary(email.probit)
+```
+
+# e)
+A 0.1 increase in the percent of characters which are "#" changes the estimated logit of probability that an email is spam by 0.1β since logit[P(spamEmail=1)]=α+β(x+0.1)=α+βx+0.1β
+
+# f)
+A 0.1 decrease in the percentage of characters which are "#" changes the odds that an email is spam by e^-0.1β
+
+# g)
+We would not be able to interpret the estimated regression coefficients in terms of their affects on the odds that an email is spam. In a probit model, changes in the predictor is dependent on the predictor and the change. While in the logit model, changes in the predictor is only dependent on the predictor. In other words, the logit model changes by a constant factor, but the changes in the probit model varies based on where the values fall in the model.
+
