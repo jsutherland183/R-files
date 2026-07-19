@@ -1,0 +1,36 @@
+---
+title: "HW-2"
+author: "Jordan Sutherland"
+date: "2/6/2022"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+2.
+
+```{r}
+qchisq(0.95,4)
+qchisq(0.05,4)
+```
+
+3. c)
+
+```{r}
+qchisq(0.975,14)
+qchisq(0.025,14)
+```
+
+4. a)
+
+```{r}
+qnorm(0.01,lower.tail=FALSE)
+```
+
+5.
+
+```{r}
+qt(0.025,34, lower.tail=FALSE)
+```

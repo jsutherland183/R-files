@@ -1,0 +1,25 @@
+---
+title: "HW 5"
+author: "Jordan Sutherland"
+date: "4/17/2022"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 2
+
+```{r}
+yield <- c(785,805,790,793,802)
+(mean(yield)-800)/(sd(yield)/sqrt(5))
+pt(-1.341104,4,lower.tail=TRUE)
+qt(0.05,4,lower.tail=TRUE)
+```
+
+## 3
+
+```{r}
+
+```

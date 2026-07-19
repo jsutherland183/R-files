@@ -1,0 +1,58 @@
+---
+title: "STA4322 Homework 2"
+author: "Jordan Sutherland"
+date: "1/23/2022"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1. 7.11
+
+
+
+```{r}
+pnorm(1.5,0,1,lower.tail=FALSE)
+pnorm(1.5,0,1,lower.tail=TRUE)
+0.9331928-0.0668072
+```
+
+The first line of R code solves for \Phi(1.5). The middle line of R code solves for \Phi(-1.5). The last line of R code calculates \Phi(1.5)-\Phi(-1.5). So the probability of the sample mean being within 2 square inches of the population mean is 0.8664.
+
+2. 7.12
+
+
+
+```{r}
+qnorm(0.95,0,1,lower.tail=TRUE)
+```
+
+The line of code calculates the \Phi value such that \Phi(a)-\Phi(-a)=0.90. Then the forester must measure 44 trees in order to ensure the sample mean is within 1 square inch of the population mean with probability 0.90.
+
+3. 7.26
+
+
+
+```{r}
+qt(0.95,8,lower.tail=TRUE)
+```
+
+The line of R code finds the critical constant t_{n-1,1-\alpha/2}. So for P(g_1\le\bar{Y}-µ≤g2), the two statistics are g_1=-1.2397 and g_2=1.2397.
+
+4. 7.42
+
+
+
+```{r}
+pnorm(2.5,0,1,lower.tail=FALSE)
+```
+
+The line of R code calculates the area more than 2.5 standard deviations above the mean on a standard normal distribution. 
+
+```{r}
+qnorm(0.975,0,1,lower.tail=TRUE)
+```
+
+The line of R code calculates the \Phi value such that \Phi(a)-\Phi(-a)=0.95. An interval that includes the average fracture strength of 100 randomly selected pieces of glass with probability of 0.95 is (\bar{Y}\ -\ 0.392,\bar{Y}+0.392).
